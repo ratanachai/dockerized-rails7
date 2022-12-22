@@ -1,0 +1,31 @@
+version: '3'
+services:
+  app:
+    image: myapp:dev
+    env_file: .env
+    depends_on:
+      - 'db'
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+    command: bash -c "rm -f tmp/pids/server.pid && bin/rails s -p 3000 -b '0.0.0.0'"
+    ports:
+      - '3000:3000'
+    volumes:
+      - bundle:/usr/local/bundle
+      - ".:/usr/src/app"
+      - "/usr/src/app/.git"  #Exclude from bind-map (Use from image)
+      - "./.docker_bash_history:/root/.bash_history"
+    # for byebug to work
+    stdin_open: true
+    tty: true
+  db:
+    image: postgres:15
+    env_file: .env
+    ports: # 127.0.0.1 to only expose the port to loopback
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - myapp_db:/var/lib/postgresql/data
+volumes:
+  myapp_db:
+  bundle:
